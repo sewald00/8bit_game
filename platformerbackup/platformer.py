@@ -12,8 +12,8 @@ RED = (255, 0, 0)
 BLUE = (137, 207, 240)
 
 # Screen dimensions
-SCREEN_WIDTH = 256
-SCREEN_HEIGHT = 240
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 304
 
 
 
@@ -114,11 +114,11 @@ class Player(pygame.sprite.Sprite):
     # Player-controlled movement:
     def go_left(self):
         """ Called when the user hits the left arrow. """
-        self.change_x = -2.5
+        self.change_x = -1.5
 
     def go_right(self):
         """ Called when the user hits the right arrow. """
-        self.change_x = 3
+        self.change_x = 1.5
 
     def stop(self):
         """ Called when the user lets off the keyboard. """
@@ -134,7 +134,7 @@ class Platform(pygame.sprite.Sprite):
             code. """
         super().__init__()
 
-        self.image = pygame.image.load('ground.png').convert_alpha()
+        self.image = pygame.image.load('tiles.png').convert_alpha()
 
 
         self.rect = self.image.get_rect()
@@ -166,11 +166,11 @@ class Level(object):
         """ Draw everything on this level. """
 
         # Draw the background
-        screen.fill(BLUE)
+        """screen.fill(BLUE)
 
         # Draw all the sprite lists that we have
         self.platform_list.draw(screen)
-        self.enemy_list.draw(screen)
+        self.enemy_list.draw(screen)"""
 
 
 # Create platforms for the level
@@ -202,14 +202,23 @@ class Level_01(Level):
 
 def main():
     """ Main Program """
-    """pygame.init()
+    pygame.init()
     pygame.mixer.init()
-    a=pygame.mixer.Sound("jump.ogg")"""
+    """a=pygame.mixer.Sound("jump.ogg")"""
     # Set the height and width of the screen
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
 
+    orientation = 'horizontal'
 
+    bg = parallax.ParallaxSurface((2512, 304), pygame.RLEACCEL)
+    bg.add('sky.png', 60)
+    bg.add('clouds.png', 50)
+    bg.add('sea.png', 35)
+    bg.add('far_ground.png', 25)
+    bg.add('back_walls.png', 10)
+    bg.add('tiles.png', 10)
+    bg.add('foreground.png', 10)
     pygame.display.set_caption("Mega Guy")
 
     # Create the player
@@ -243,30 +252,41 @@ def main():
     clock = pygame.time.Clock()
 
     # -------- Main Program Loop -----------
-    while not done:
+    run = True
+    speed = 0
+    t_ref = 0
+    while run:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
-
+            if event.type == QUIT:
+                run = False
+            if event.type == KEYDOWN and event.key == K_RIGHT:
+                speed += 20
+                player.go_right()
+            if event.type == KEYUP and event.key == K_RIGHT:
+                speed -= 20
+            if event.type == KEYDOWN and event.key == K_LEFT:
+                speed -= 20
+                player.go_left()
+            if event.type == KEYUP and event.key == K_LEFT:
+                speed += 20
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    player.go_left()
-                if event.key == pygame.K_RIGHT:
-                    player.go_right()
                 if event.key == pygame.K_UP:
                     """a.play()"""
                     player.jump()
                     player.image = megaguy = pygame.image.load('megaguyjump.png').convert_alpha()
-
-
-
-
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT and player.change_x < 0:
                     player.stop()
 
                 if event.key == pygame.K_RIGHT and player.change_x > 0:
                     player.stop()
+
+
+
+
+
+
+
 
         # Update the player.
         active_sprite_list.update()
@@ -283,8 +303,15 @@ def main():
             player.rect.left = 0
 
         # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
-        current_level.draw(screen)
-        active_sprite_list.draw(screen)
+        bg.scroll(speed, orientation)
+        t = pygame.time.get_ticks()
+        if (t - t_ref) > 60:
+            bg.draw(screen)
+            current_level.draw(screen)
+            active_sprite_list.draw(screen)
+            pygame.display.flip()
+
+
 
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
 
